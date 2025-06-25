@@ -1,0 +1,38 @@
+{
+  "name": "contentful-wysiwyg-layout-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@contentful/app-sdk": "4.29.7",
+    "@contentful/f36-components": "4.80.4",
+    "@contentful/f36-tokens": "4.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "contentful-management": "^11.0.0",
+    "uuid": "^9.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "react-scripts": "^5.0.1"
+  }
+}

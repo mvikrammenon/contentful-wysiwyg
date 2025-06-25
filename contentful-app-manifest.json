@@ -1,0 +1,15 @@
+{
+  "name": "Wysiwyg Layout Helper",
+  "srcdoc": "./build/index.html",
+  "locations": [
+    {
+      "location": "app-config",
+      "name": "Layout Editor"
+    },
+    {
+      "location": "page",
+      "name": "Layout Search"
+    }
+  ],
+  "fields": []
+}
