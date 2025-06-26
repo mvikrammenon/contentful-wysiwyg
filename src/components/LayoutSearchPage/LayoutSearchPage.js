@@ -87,22 +87,36 @@ const LayoutSearchPage = ({ sdk }) => {
     setError(null);
     try {
       // For now, only searching savedLayout. Later, combine with savedLayoutWithContent
-      // Basic search: filter by name containing the query.
-      // Contentful's `match` query operator can be used for text search.
+      // Search for populatedBentoLayout entries
+      // Include the linked bentoLayoutConfiguration to get its name
       const params = {
-        content_type: 'savedLayout',
+        content_type: 'populatedBentoLayout',
         order: '-sys.updatedAt',
+        include: 1, // Includes linked entries one level deep
       };
       if (query.trim()) {
-        // This searches the 'name' field. Assumes 'name' is indexed for search.
         params['fields.name[match]'] = query.trim();
       }
 
       const result = await sdk.space.getEntries(params);
-      setLayouts(result.items || []);
+
+      // Process result to easily access linked bento configuration details
+      const populatedLayouts = (result.items || []).map(item => {
+        let bentoConfigName = 'Unknown Template';
+        const bentoConfigLink = item.fields.bentoConfiguration?.[defaultLocale];
+        if (bentoConfigLink && result.includes?.Entry) {
+          const linkedConfig = result.includes.Entry.find(entry => entry.sys.id === bentoConfigLink.sys.id);
+          if (linkedConfig) {
+            bentoConfigName = linkedConfig.fields.name?.[defaultLocale] || 'Unnamed Template';
+          }
+        }
+        return { ...item, bentoConfigName }; // Add resolved name to the item
+      });
+      setLayouts(populatedLayouts);
+
     } catch (err) {
-      console.error('Error fetching layouts:', err);
-      setError('Failed to fetch layouts. See console for details.');
+      console.error('Error fetching populated layouts:', err);
+      setError('Failed to fetch populated layouts. See console for details.');
       setLayouts([]);
     }
     setIsLoading(false);
@@ -123,8 +137,8 @@ const LayoutSearchPage = ({ sdk }) => {
 
   return (
     <Box padding="spacingL">
-      <Heading>Search Saved Layouts</Heading>
-      <Paragraph>Find and preview your saved layout structures.</Paragraph>
+      <Heading>Search Populated Bento Layouts</Heading>
+      <Paragraph>Find your saved instances of Bento layouts.</Paragraph>
 
       <form onSubmit={handleSearchSubmit}>
         <FormControl id="layoutSearch" marginBottom="spacingM">
@@ -149,15 +163,24 @@ const LayoutSearchPage = ({ sdk }) => {
         <Stack flexDirection="column" spacing="spacingM" marginTop="spacingL">
           {layouts.map(layout => (
             <Card key={layout.sys.id}>
-              <Heading as="h3">{layout.fields.name?.[defaultLocale] || 'Unnamed Layout'}</Heading>
-              {layout.fields.description && <Paragraph>{layout.fields.description[defaultLocale]}</Paragraph>}
-              <Text fontColor="gray500" fontSize="fontSizeS">
+              <Heading as="h3">{layout.fields.name?.[defaultLocale] || 'Unnamed Populated Layout'}</Heading>
+              <Text fontColor="gray700" as="p">
+                Using Template: <strong>{layout.bentoConfigName || 'N/A'}</strong>
+              </Text>
+              {/* We could show slotAssignments count or other details here */}
+              {/* For example: <Text>Slots Filled: {Object.keys(layout.fields.slotAssignments?.[defaultLocale] || {}).length}</Text> */}
+              <Text fontColor="gray500" fontSize="fontSizeS" marginTop="spacingS">
                 Last updated: {new Date(layout.sys.updatedAt).toLocaleString()}
               </Text>
-              <Box marginTop="spacingS">
-                <GridPreview gridDefinition={layout.fields.gridDefinition?.[defaultLocale]} defaultLocale={defaultLocale} />
-              </Box>
-              {/* Add actions like "Edit" or "Use this layout" later */}
+              {/*
+                GridPreview is removed for now. To re-enable, we'd need to:
+                1. Fetch the linked bentoLayoutConfiguration if not already fully included.
+                2. Pass its gridDefinition to GridPreview.
+                const bentoConfigLink = layout.fields.bentoConfiguration?.[defaultLocale];
+                // ... logic to find full bentoConfig entry from result.includes ...
+                // then pass bentoConfig.fields.gridDefinition?.[defaultLocale] to GridPreview
+              */}
+              {/* Add actions like "Edit" or "View" later */}
             </Card>
           ))}
         </Stack>
